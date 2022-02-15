@@ -16,7 +16,14 @@ const BottomModal = ({ children, show, handleClose, ...props }: Props): JSX.Elem
             onRequestClose={handleClose}
             {...props}
         >
-            <View style={styles.background} />
+            {/* semi transparent background behind the popup */}
+            <Modal
+                animationType='fade'
+                transparent visible={show}
+                onRequestClose={handleClose} >
+                <Pressable onPress={handleClose} style={styles.background} />
+            </Modal>
+
             <View style={styles.container}>
                 <Pressable onPress={handleClose} style={styles.close}>
                     <Text style={styles.text}>Close</Text>
