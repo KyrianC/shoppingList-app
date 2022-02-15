@@ -38,7 +38,6 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
 
     const { roomId, username } = route.params;
 
-    const [msg, setMsg] = React.useState<message>("")
     const [msgList, setMsgList] = React.useState<ListItem[]>([]);
     const [socket, setSocket] = React.useState<Socket | null>(null)
 
@@ -69,12 +68,14 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
         setShowAddItemModal(!showAddItemModal)
     }
 
+
     React.useEffect(() => {
         socket?.on('joinRoom', (room: Room) => {
             deleteOldItem(room.items)
             setMsgList(room.items)
         })
         socket?.on('addItem', (items: ListItem[]) => {
+            console.log('Item added successfully', items)
             setMsgList(items)
         })
         socket?.on('toggleItem', (items: ListItem[]) => {
@@ -89,6 +90,11 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
                 socket?.emit('deleteItem', i._id)
             }
         })
+    }
+
+    const addItem = (item: any) => {
+        console.log('add Item ', item.name)
+        socket?.emit('addItem', item)
     }
 
     const itemisDoneAndTooOld = (item: ListItem): boolean => {
@@ -123,7 +129,7 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
                 <Text>Add Item</Text>
             </Pressable>
             <ItemDetailModal show={showItemModal} item={itemModalItem} closeModal={closeItemModal} />
-            <AddItemModal socket={socket} show={showAddItemModal} closeModal={toggleAddItemModal} />
+            <AddItemModal addItem={addItem} show={showAddItemModal} closeModal={toggleAddItemModal} />
         </View>
     );
 }
@@ -142,7 +148,7 @@ const styles = StyleSheet.create({
     button: {
         borderRadius: 15,
         backgroundColor: globalColors.accentuated,
-        margin: 40,
+        margin: 20,
         height: 35,
         alignItems: 'center',
         justifyContent: 'center',

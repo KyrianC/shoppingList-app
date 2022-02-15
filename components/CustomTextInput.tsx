@@ -17,11 +17,9 @@ const CustomTextInput = ({ label, required, nextInput, inputRef, handleSubmit, .
     const handleFocus = () => { setFocus(true) }
     const handleBlur = () => { setFocus(false) }
     const handleNext = (ref: typeof nextInput) => {
-        // submit or focus on next input
         if (handleSubmit) {
             handleSubmit()
-        }
-        if (nextInput && ref) {
+        } else if (nextInput && ref) {
             ref.current?.focus()
         }
     }

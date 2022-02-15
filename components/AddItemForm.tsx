@@ -17,6 +17,10 @@ const AddItemForm = ({ item, handleChange, handleSubmit }: Props): JSX.Element =
     const descriptionRef = React.useRef<TextInput>(null)
     const quantityRef = React.useRef<TextInput>(null)
     const priorityRef = React.useRef<TextInput>(null)
+    const handleSubmitAndFocus = () => {
+        handleSubmit()
+        nameRef.current?.focus()
+    }
 
     return (
         <ScrollView>
@@ -28,6 +32,7 @@ const AddItemForm = ({ item, handleChange, handleSubmit }: Props): JSX.Element =
                 returnKeyType='next'
                 inputRef={nameRef}
                 nextInput={descriptionRef}
+                value={item.name}
             />
             <CustomTextInput
                 label="Description"
@@ -37,6 +42,7 @@ const AddItemForm = ({ item, handleChange, handleSubmit }: Props): JSX.Element =
                 returnKeyType='next'
                 inputRef={descriptionRef}
                 nextInput={quantityRef}
+                value={item.description}
             />
             <CustomTextInput
                 label="Quantity"
@@ -44,6 +50,7 @@ const AddItemForm = ({ item, handleChange, handleSubmit }: Props): JSX.Element =
                 onChangeText={(val) => handleChange(val, 'quantity')}
                 value={item.quantity.toString()}
                 returnKeyType='next'
+                keyboardType='number-pad'
                 inputRef={quantityRef}
                 nextInput={priorityRef}
             />
@@ -54,10 +61,11 @@ const AddItemForm = ({ item, handleChange, handleSubmit }: Props): JSX.Element =
                 value={item.priority.toString()}
                 inputRef={priorityRef}
                 nextInput={nameRef}
-                handleSubmit={handleSubmit}
+                keyboardType='decimal-pad'
+                handleSubmit={handleSubmitAndFocus}
             />
 
-            <Pressable style={styles.submit} onPress={handleSubmit}>
+            <Pressable style={styles.submit} onPress={handleSubmitAndFocus}>
                 <Text style={styles.submitText}>submit</Text>
             </Pressable>
         </ScrollView>

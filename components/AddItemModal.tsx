@@ -15,6 +15,7 @@ export type Item = {
 type Props = {
     show: boolean
     closeModal: () => void
+    addItem: (item: Item) => void
     socket: Socket | null
 }
 
@@ -25,7 +26,7 @@ const baseItem = {
     priority: 1,
 }
 
-const AddItemModal = ({ show, closeModal }: Props): JSX.Element => {
+const AddItemModal = ({ show, closeModal, addItem }: Props): JSX.Element => {
 
     const [item, setItem] = React.useState<Item>(baseItem)
 
@@ -37,8 +38,8 @@ const AddItemModal = ({ show, closeModal }: Props): JSX.Element => {
     }
 
     const handleSubmit = () => {
-        console.log("New Item added: ", item)
         setItem(baseItem)
+        addItem(item)
     }
 
     return (
@@ -46,6 +47,7 @@ const AddItemModal = ({ show, closeModal }: Props): JSX.Element => {
             <View>
                 <Text style={styles.header}>Add an Item</Text>
                 <AddItemForm item={item} handleChange={handleChange} handleSubmit={handleSubmit} />
+                <Text>{item.name}:{item.description}:{item.quantity}:{item.priority}</Text>
             </View>
         </BottomModal>
     )
