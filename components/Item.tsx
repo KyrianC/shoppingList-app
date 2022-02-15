@@ -1,6 +1,6 @@
 import { Text, View, Pressable, StyleSheet, Image } from "react-native"
 import type { ListItem } from './Room'
-import globalColors from '../global/colors'
+import globalColors, { usePriority } from '../global/colors'
 import React from "react"
 
 
@@ -12,10 +12,12 @@ type props = {
 
 const Item = ({ item, toggleDone, setModal }: props): JSX.Element => {
 
+    const { color } = usePriority(item.priority)
+
     return (
         <View style={[styles.item, item.done && styles.itemDone]}>
             <Pressable style={styles.itemMain} onPress={() => toggleDone(item._id)}>
-                <View style={[styles.icon, item.done && styles.iconsDone]}>
+                <View style={[styles.icon, item.done ? styles.iconsDone : { borderColor: color }]}>
                     {item.done && (
                         <Image style={styles.check} source={require('../assets/check.png')}></Image>
                     )}
@@ -64,8 +66,8 @@ const styles = StyleSheet.create({
         width: 20,
     },
     iconsDone: {
-        borderColor: globalColors.accentuated,
-        backgroundColor: globalColors.accentuated,
+        borderColor: globalColors.green,
+        backgroundColor: globalColors.green,
         alignItems: 'center',
         justifyContent: 'center',
     },
