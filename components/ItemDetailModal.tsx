@@ -1,33 +1,34 @@
-import { Text, StyleSheet, View } from "react-native"
+import { Text, StyleSheet, View, Pressable, Modal } from "react-native"
 import { ListItem } from "./Room"
-import globalColors from '../global/colors'
+import globalColors, { usePriority } from '../global/colors'
 import BottomModal from "./BottomModal"
+import React from "react"
 
 type Props = {
     item: ListItem | null;
     closeModal: () => void
     show: boolean
+    deleteItem: (item: ListItem) => void
 }
 
-const ItemDetailModal = ({ show, item, closeModal }: Props): JSX.Element => {
-
-    const priorities = {
-        1: 'normal',
-        2: 'necessity',
-        3: 'important'
-    }
-
+const ItemDetailModal = ({ show, item, closeModal, deleteItem }: Props): JSX.Element => {
     if (item) {
+
+        const { color, text } = usePriority(item.priority)
+
         return (
             <BottomModal handleClose={closeModal} show={show}>
                 <View>
                     <Text style={styles.header}>{item?.name}</Text>
-                    <Text>quantity: {item?.quantity}</Text>
-                    <Text>Priority: {priorities[item.priority]}</Text>
-                    <Text>Written by: kyrian</Text>
+                    <Text style={styles.text}>quantity: {item?.quantity}</Text>
+                    <Text style={[styles.text, { color }]}>Priority: {text}</Text>
+                    <Text style={styles.text}>Written by: kyrian</Text>
                     {item.description && (
-                        <Text>{item?.description}</Text>
+                        <Text style={styles.text}>Description: {item?.description}</Text>
                     )}
+                    <Pressable onPress={() => deleteItem(item)} style={styles.delete}>
+                        <Text style={styles.deleteText}>Delete</Text>
+                    </Pressable>
                 </View>
             </BottomModal>
         )
@@ -52,12 +53,24 @@ const styles = StyleSheet.create({
         color: globalColors.light,
         fontSize: 24,
         fontWeight: 'bold',
+        marginBottom: 12,
     },
-    closeBtn: {
+    text: {
         color: globalColors.light,
-        position: 'absolute',
-        top: 2,
-        right: 2,
+        marginVertical: 8,
+        fontSize: 18,
+    },
+    delete: {
+        borderRadius: 15,
+        backgroundColor: globalColors.red,
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 20,
+    },
+    deleteText: {
+        fontSize: 16,
+        fontWeight: 'bold'
     }
 })
 

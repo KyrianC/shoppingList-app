@@ -24,8 +24,8 @@ const Item = ({ item, toggleDone, setModal }: props): JSX.Element => {
                 </View>
                 <Text style={[styles.text, item.done && styles.textDone]}>{item.name}  x{item.quantity}</Text>
             </Pressable>
-            <Pressable onPress={() => setModal(item)}>
-                <Text style={styles.detail}>Details</Text>
+            <Pressable style={styles.detailBtn} onPress={() => setModal(item)}>
+                <Text style={styles.detailText}>Details</Text>
             </Pressable>
         </View>
     )
@@ -37,7 +37,6 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         marginBottom: 20,
         marginHorizontal: 15,
-        padding: 10,
         height: 50,
         flex: 1,
         flexDirection: "row",
@@ -46,6 +45,9 @@ const styles = StyleSheet.create({
     itemMain: {
         flex: 1,
         flexDirection: 'row',
+        alignItems: 'center',
+        height: '100%',
+        paddingHorizontal: 10,
     },
     itemDone: {
         backgroundColor: globalColors.midDark,
@@ -75,7 +77,13 @@ const styles = StyleSheet.create({
         height: 12,
         width: 12,
     },
-    detail: {
+    detailBtn: {
+        height: '100%',
+        paddingRight: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    detailText: {
         color: globalColors.light,
         fontSize: 12,
     }

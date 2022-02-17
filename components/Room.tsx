@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, Alert } from "react-native";
 import io, { Socket } from 'socket.io-client'
 import Item from './Item'
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -7,9 +7,7 @@ import type { RootStackParamList } from "../App"
 import { useFocusEffect } from "@react-navigation/native";
 import globalColors from '../global/colors'
 import ItemDetailModal from "./ItemDetailModal";
-import AddItemModal from "./AddItemModal";
-
-type message = string
+import AddItemModal, { FormItem } from "./AddItemModal";
 import SettingsModal from "./SettingsModal";
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Room'>
@@ -39,7 +37,7 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
 
     const { roomId, username } = route.params;
 
-    const [msgList, setMsgList] = React.useState<ListItem[]>([]);
+    const [itemList, setItemList] = React.useState<ListItem[]>([]);
     const [socket, setSocket] = React.useState<Socket | null>(null)
 
     const [showItemModal, setShowItemModal] = React.useState(false)
@@ -57,6 +55,8 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
             ),
         });
     }, [navigation]);
+
+    // init and cose socket connection when navigating
     useFocusEffect(
         React.useCallback(() => {
             setSocket(io('http://192.168.1.128:8000', { transports: ['websocket'], query: { roomId, username } }))
@@ -65,49 +65,29 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
             }
         }, [navigation])
     )
-
-    const setItemModal = (item: ListItem) => {
-        setShowItemModal(true)
-        setItemModalItem(item)
-    }
-
-    const closeItemModal = () => {
-        setShowItemModal(false)
-        setItemModalItem(null)
-    }
-
-    const toggleAddItemModal = () => {
-        setShowAddItemModal(!showAddItemModal)
-    }
-
-
+    // listen to socket events
     React.useEffect(() => {
-        socket?.on('joinRoom', (room: Room) => {
-            deleteOldItem(room.items)
-            setMsgList(room.items)
+        socket?.on('joinRoom', (items: ListItem[]) => {
+            deleteOldItem(items)
+            setItemList(items)
         })
         socket?.on('addItem', (items: ListItem[]) => {
             console.log('Item added successfully', items)
-            setMsgList(items)
+            setItemList(items)
         })
         socket?.on('toggleItem', (items: ListItem[]) => {
-            setMsgList(items)
+            setItemList(items)
         })
-    }, [socket, msgList])
-
-    const deleteOldItem = (items: ListItem[]) => {
-        items.forEach(i => {
-            if (itemisDoneAndTooOld(i)) {
-                console.log('deleting item ', i.name)
-                socket?.emit('deleteItem', i._id)
-            }
+        socket?.on('deleteItem', (items: ListItem[]) => {
+            setItemList(items)
         })
-    }
+    }, [socket, itemList])
 
-    const addItem = (item: any) => {
-        console.log('add Item ', item.name)
-        socket?.emit('addItem', item)
-    }
+
+    // Items methods
+    const addItem = (item: FormItem) => socket?.emit('addItem', item)
+
+    const toggleDone = (id: string) => socket?.emit('toggleItem', id)
 
     const itemisDoneAndTooOld = (item: ListItem): boolean => {
         if (!item.done || !item.updated) {
@@ -118,25 +98,93 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
         return threedaysAgo > itemLastUpdated
     }
 
-    const toggleDone = (id: string) => {
-        socket?.emit('toggleItem', id)
-        console.log('toggle done')
+    const deleteItem = (item: ListItem) => {
+        Alert.alert(
+            `Delete ${item.name}`,
+            "Do you really want to delete this Item?",
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Delete',
+                    onPress: () => {
+                        socket?.emit('deleteItem', item._id)
+                        closeItemModal()
+                    }
+                }
+            ],
+            { cancelable: true }
+        )
     }
+
+    const deleteOldItem = (items: ListItem[]) => {
+        items.forEach(i => (
+            itemisDoneAndTooOld(i) && socket?.emit('deleteItem', i._id)
+        ))
+    }
+
+
+    // ItemList methods
+    const filteredList = () => {
+        const oneDayAgo = (Date.now() - (1000 * 60 * 60 * 24))
+        const active = itemList.filter(item => (
+            new Date(item.updated).getTime() > oneDayAgo
+        ))
+        const inactive = itemList.filter(item => (
+            item.done && new Date(item.updated).getTime() < oneDayAgo
+        ))
+        return { active, inactive }
+    }
+
+
+    // Modals methods
+    const setItemModal = (item: ListItem) => {
+        setShowItemModal(true)
+        setItemModalItem(item)
+    }
+    const closeItemModal = () => {
+        setShowItemModal(false)
+        setItemModalItem(null)
+    }
+    const toggleAddItemModal = () => setShowAddItemModal(!showAddItemModal)
+
 
     if (!socket) {
         return <Text>...waitin connection</Text>
     }
     return (
         <View style={styles.container}>
-            <FlatList
-                data={msgList}
-                renderItem={({ item }) => (
+
+            {/* Item lists */}
+            <ScrollView style={{ paddingTop: 15 }}>
+
+                {/* Active items */}
+                {filteredList().active.map(item => (
                     <Item
                         key={item._id}
                         item={item}
                         toggleDone={toggleDone}
                         setModal={setItemModal}
-                    />)} />
+                    />
+                ))}
+
+                {/* Inactive Items if any */}
+                {filteredList().inactive.length > 0 && (
+                    <Text style={styles.inactive}>Done this week</Text>
+                )}
+
+                {filteredList().inactive.map(item => (
+                    <Item
+                        key={item._id}
+                        item={item}
+                        toggleDone={toggleDone}
+                        setModal={setItemModal}
+                    />
+                ))}
+            </ScrollView>
+
             {/* Add Item Button */}
             <View style={styles.addItemSection}>
                 <Pressable style={styles.button} onPress={toggleAddItemModal} >
@@ -163,6 +211,7 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
                 username={username}
                 roomId={roomId}
             />
+
         </View>
     );
 }
@@ -171,12 +220,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: globalColors.dark,
-        justifyContent: "center",
-        paddingTop: 40,
-    },
-    item: {
-        fontSize: 16,
-        margin: 12,
     },
     button: {
         borderRadius: 15,
@@ -192,6 +235,17 @@ const styles = StyleSheet.create({
         padding: 10,
         margin: 40,
         height: 35
+    },
+    inactive: {
+        color: globalColors.light,
+        fontSize: 18,
+        padding: 15
+    },
+    addItemSection: {
+        borderRadius: 15,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        backgroundColor: globalColors.midDark
     }
 });
 

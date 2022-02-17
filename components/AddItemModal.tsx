@@ -1,11 +1,10 @@
 import React from "react"
-import { Modal, StyleSheet, Text, View, Pressable, KeyboardAvoidingView } from "react-native"
-import { Socket } from "socket.io-client"
+import { StyleSheet, Text, View } from "react-native"
 import globalColors from '../global/colors'
 import AddItemForm from "./AddItemForm"
 import BottomModal from "./BottomModal"
 
-export type Item = {
+export type FormItem = {
     name: string
     description?: string
     quantity: number
@@ -15,8 +14,7 @@ export type Item = {
 type Props = {
     show: boolean
     closeModal: () => void
-    addItem: (item: Item) => void
-    socket: Socket | null
+    addItem: (item: FormItem) => void
 }
 
 const baseItem = {
@@ -28,7 +26,7 @@ const baseItem = {
 
 const AddItemModal = ({ show, closeModal, addItem }: Props): JSX.Element => {
 
-    const [item, setItem] = React.useState<Item>(baseItem)
+    const [item, setItem] = React.useState<FormItem>(baseItem)
 
     const handleChange = (val: string, name: string) => {
         setItem(prev => ({
