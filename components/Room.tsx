@@ -10,6 +10,7 @@ import ItemDetailModal from "./ItemDetailModal";
 import AddItemModal from "./AddItemModal";
 
 type message = string
+import SettingsModal from "./SettingsModal";
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Room'>
 
@@ -44,7 +45,18 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
     const [showItemModal, setShowItemModal] = React.useState(false)
     const [itemModalItem, setItemModalItem] = React.useState<ListItem | null>(null)
     const [showAddItemModal, setShowAddItemModal] = React.useState(false)
+    const [showSettingsModal, setShowSettingsModal] = React.useState(false)
 
+    // Add setting Btn on StatusBar
+    React.useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <Pressable onPress={() => setShowSettingsModal(true)}>
+                    <Image source={require('../assets/more.png')} />
+                </Pressable>
+            ),
+        });
+    }, [navigation]);
     useFocusEffect(
         React.useCallback(() => {
             setSocket(io('http://192.168.1.128:8000', { transports: ['websocket'], query: { roomId, username } }))
@@ -125,11 +137,32 @@ const Room = ({ route, navigation }: Props): JSX.Element => {
                         toggleDone={toggleDone}
                         setModal={setItemModal}
                     />)} />
-            <Pressable style={styles.button} onPress={toggleAddItemModal} >
-                <Text>Add Item</Text>
-            </Pressable>
-            <ItemDetailModal show={showItemModal} item={itemModalItem} closeModal={closeItemModal} />
-            <AddItemModal addItem={addItem} show={showAddItemModal} closeModal={toggleAddItemModal} />
+            {/* Add Item Button */}
+            <View style={styles.addItemSection}>
+                <Pressable style={styles.button} onPress={toggleAddItemModal} >
+                    <Text>Add Item</Text>
+                </Pressable>
+            </View>
+
+            {/* Modal */}
+            <ItemDetailModal
+                show={showItemModal}
+                item={itemModalItem}
+                closeModal={closeItemModal}
+                deleteItem={deleteItem}
+            />
+            <AddItemModal
+                addItem={addItem}
+                show={showAddItemModal}
+                closeModal={toggleAddItemModal}
+            />
+            <SettingsModal
+                show={showSettingsModal}
+                handleClose={() => setShowSettingsModal(false)}
+                navigation={navigation}
+                username={username}
+                roomId={roomId}
+            />
         </View>
     );
 }
